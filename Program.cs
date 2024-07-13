@@ -19,6 +19,7 @@ class Program
     private static double[,] GeraMatriz(int size)
     {
         double[,] matriz = new double[size, 5];
+        // [a][b][c][d][RMSE]
         Random rnd = new Random();
         
         for (int i = 0; i < size; i++)
@@ -91,6 +92,90 @@ class Program
         }
     }
 
+    static void NextGeneration(ref double[,] Population)
+    {
+        int size = GlobalVariables.POPULATION_SIZE;
+        double[,] nextPopulation = new double[size, 4];//n precisamos do rmse aqui, é apenas uma matriz temporal.
+        int indice = 0;
+        double melhorRMSE = 5;
+
+        for (int i = 0; i < size; i++)
+        {
+
+            if (melhorRMSE > Population[i,4]) 
+            {
+                melhorRMSE = Population[i, 4];
+                indice = i;
+            }
+        }
+
+        //replicando 4 vezes na proxima geração o melhor RMSE
+        for (int u = 0; u < 4; u++)
+        {
+            for (int g = 0; g < 4; g++)
+            {
+                nextPopulation[u, g] = Population[indice, g];
+            }
+        }
+
+        //Cruzamento 
+        Random rnd = new Random();
+        for (int w = 4; w < size/2; w++)
+        {
+            int pai1=0, pai2=0;
+            while(pai1 == pai2 || pai2 == pai1)//evita valores repetidos
+            {
+                pai1 = rnd.Next(0,size);
+                pai2 = rnd.Next(0, size);
+            }
+
+            int[] genDist = new int[4];
+            int[] InvgenDist = new int[4];
+            for (int i = 0;i < 4; i++)
+            {
+                genDist[i] = rnd.Next(1,2);
+                //              ....pergunta...  true false
+                InvgenDist[i] = genDist[i] == 1 ? 2  : 1;
+            }
+
+            //filho1
+            for (int a = 0; a < 4; a++)
+            {
+                if (genDist[a] == 1)
+                {
+                    nextPopulation[w,a] = Population[pai1,a]; 
+                }
+                else if (genDist[a] == 2)
+                {
+                    nextPopulation[w, a] = Population[pai2, a];
+                }
+            }
+
+            //filho2 
+            for (int a = 0; a < 4; a++)
+            {
+                if (InvgenDist[a] == 1)
+                {
+                    nextPopulation[w, a] = Population[pai1, a];
+                }
+                else if (InvgenDist[a] == 2)
+                {
+                    nextPopulation[w, a] = Population[pai2, a];
+                }
+            }
+        }
+
+        //copiando a nova geração
+        for (int i = 0; i < size; i++)
+        {
+            for (int z = 0; z < 4; z++)
+            {
+                Population[i, z] = nextPopulation[i, z];
+            }
+        }
+
+    }
+
     static void Main(string[] args)
     {
         double[] ReferenceFunction = TargetFuntion();
@@ -99,7 +184,15 @@ class Program
         calcRMSE(ref population,ReferenceFunction);
         PrintMatrix(population);
 
+        NextGeneration(ref population);
+        calcRMSE(ref population, ReferenceFunction);
 
+
+        /*
+        - replicar o melhor RMSE na proxima população
+        - fazer cruzamento 
+        - passar para próxima geração
+         */
 
 
     }
