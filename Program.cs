@@ -120,7 +120,7 @@ class Program
 
         //Cruzamento 
         Random rnd = new Random();
-        for (int w = 4; w < size/2; w++)
+        for (int w = 4; w < size; w++)
         {
             int pai1=0, pai2=0;
             while(pai1 == pai2 || pai2 == pai1)//evita valores repetidos
@@ -183,10 +183,14 @@ class Program
         double[,] population = GeraMatriz(GlobalVariables.POPULATION_SIZE);
         calcRMSE(ref population,ReferenceFunction);
         PrintMatrix(population);
+        Console.WriteLine("====================================================\n");
 
-        NextGeneration(ref population);
-        calcRMSE(ref population, ReferenceFunction);
-
+        for (int y = 0; y < GlobalVariables.GENERATIONS; y++)
+        {
+            NextGeneration(ref population);
+            calcRMSE(ref population, ReferenceFunction);
+        }
+            PrintMatrix(population);
 
         /*
         - replicar o melhor RMSE na proxima população
