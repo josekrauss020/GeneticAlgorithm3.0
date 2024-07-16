@@ -1,14 +1,17 @@
 ﻿
 using System;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace GeneticAlgorithm;
 
-public class GlobalVariables
+public class GV
 {
     // Variável global
     public static int POPULATION_SIZE = 600;
     public static int GENERATIONS = 1000;
     public static double taxaElitismo = 0.01;
+    public static double mutationRate = 0.05;
     
 }
 
@@ -71,7 +74,7 @@ class Program
     {
         double[] individualResp = new double[22];
 
-        for (int i = 0; i < GlobalVariables.POPULATION_SIZE; i++)
+        for (int i = 0; i < GV.POPULATION_SIZE; i++)
         {
             int u = 0;
             double somatoria = 0;
@@ -94,7 +97,7 @@ class Program
 
     static void NextGeneration(ref double[,] Population)
     {
-        int size = GlobalVariables.POPULATION_SIZE;
+        int size = GV.POPULATION_SIZE;
         double[,] nextPopulation = new double[size, 4];//n precisamos do rmse aqui, é apenas uma matriz temporal.
         int indice = 0;
         double melhorRMSE = 5;
@@ -109,8 +112,10 @@ class Program
             }
         }
 
+        double tras = GV.taxaElitismo * GV.POPULATION_SIZE;
+        int qtdReplic = (int)Math.Round(tras);
         //replicando 4 vezes na proxima geração o melhor RMSE
-        for (int u = 0; u < 4; u++)
+        for (int u = 0; u < qtdReplic; u++)
         {
             for (int g = 0; g < 4; g++)
             {
@@ -120,7 +125,7 @@ class Program
 
         //Cruzamento 
         Random rnd = new Random();
-        for (int w = 4; w < size; w++)
+        for (int w = qtdReplic; w < size; w++)
         {
             int pai1=0, pai2=0;
             while(pai1 == pai2 || pai2 == pai1)//evita valores repetidos
@@ -175,19 +180,43 @@ class Program
         }
 
     }
+    
+    static void Mutation (ref double[,] Population)
+    {
+        double Nmutation = GV.mutationRate;
+        Random rnd = new Random();
+        Random rnd2 = new Random();
+        Random rndDouble = new Random();
+
+        for (int i = 0; i < GV.POPULATION_SIZE; i++)
+        {
+            double RandomValue = rnd.NextDouble();
+            
+            if (RandomValue <= Nmutation)
+            {
+                int a = rnd2.Next(0, 3);
+                double mN = rndDouble.NextDouble();
+                double mutationNumber = (mN * 2) - 1;
+                Population[i, a] +=  mutationNumber;
+            }
+
+
+        }
+    }
 
     static void Main(string[] args)
     {
         double[] ReferenceFunction = TargetFuntion();
 
-        double[,] population = GeraMatriz(GlobalVariables.POPULATION_SIZE);
+        double[,] population = GeraMatriz(GV.POPULATION_SIZE);
         calcRMSE(ref population,ReferenceFunction);
         PrintMatrix(population);
         Console.WriteLine("====================================================\n");
 
-        for (int y = 0; y < GlobalVariables.GENERATIONS; y++)
+        for (int y = 0; y < GV.GENERATIONS; y++)
         {
             NextGeneration(ref population);
+            Mutation(ref population);
             calcRMSE(ref population, ReferenceFunction);
         }
             PrintMatrix(population);
